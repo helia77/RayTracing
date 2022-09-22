@@ -7,7 +7,6 @@
 using namespace std;
 
 struct sphere {
-	// c, r, color
 	float radius;
 	vect points;
 	float color[3];
@@ -17,18 +16,14 @@ struct sphere {
 struct vect {
 	float x, y, z;
 	float len;
-
 	vect(float X, float Y, float Z)
 		: x(X), y(Y), z(Z)
 	{
 		len = sqrt(X * X + Y * Y + Z * Z);
 	}
-
 	vect()
 		: x(0), y(0), z(0), len(0)
-	{
-	}
-
+	{}
 	vect operator-(vect tar) {
 		vect result;
 		result.x = x - tar.x;
@@ -36,7 +31,6 @@ struct vect {
 		result.z = z - tar.z;
 		return result;
 	}
-
 	vect operator+(vect tar) {
 		vect result;
 		result.x = x + tar.x;
@@ -44,7 +38,6 @@ struct vect {
 		result.z = z + tar.z;
 		return result;
 	}
-
 	// dot (inner) product of two vectors
 	float dot(vect tar) {
 		float result = 0.0f;
@@ -54,14 +47,20 @@ struct vect {
 		return result;
 	}
 	// scalar 
-	vect operator*(vect tar) {
+	vect scalar(vect tar) {
 		vect result;
 		result.x = x * tar.x;
 		result.y = y * tar.y;
 		result.z = z * tar.z;
 		return result;
 	}
-
+	vect operator*(float t) {
+		vect result;
+		result.x = x * t;
+		result.y = y * t;
+		result.z = z * t;
+		return result;
+	}
 	vect normalize() {
 		vect result;
 		result.x = x / len;
@@ -70,13 +69,23 @@ struct vect {
 		return result;
 	}
 };
-
+struct ray {
+	vect p;
+	vect v;
+	vect position(float t) {
+		vect result;
+		result.x = p.x + v.x * t;
+		result.y = p.y + v.y * t;
+		result.z = p.z + v.z * t;
+		return p + (v*t);
+	}
+};
 struct intersection {
-	std::vector<float> point;
+	vect pts;
 	std::vector<float> color;
-
-	intersection(std::vector<float> pos, std::vector<float> col) {
-		point = pos;
+	
+	intersection(vect pos, std::vector<float> col) {
+		pts = pos;
 		color = col;
 	}
 };
@@ -120,7 +129,7 @@ int main(int argc, char** argv[])
 {
 	float z = 2;
 	short N = 512;
-	char* image = (char*)malloc(N * N * 3);
+	/*char* image = (char*)malloc(N * N * 3);
 	for (int i = 0; i < N; i++) {
 		for (int j = 0; j < N; j++) {
 			image[j * 300*3 + i * 3 + 0] = '0';
@@ -128,15 +137,28 @@ int main(int argc, char** argv[])
 			image[j * 300*3 + i * 3 + 2] = 'r';
 		}
 	}
-	
-	write_image("spheres.tga", image, N);
+	*/
+	//write_image("spheres.tga", image, N);
 	vector<sphere> spheres;
 	spheres = ReadSphere("spheres.txt");
 
 
+	char* image = (char*)malloc(300 * 300 * 3);
+	for (const sphere& e : spheres) {
+		int x = e.points.x;
+		int y = e.points.y;
+		int z = e.points.z;
+
+		int a = e.color[0];
+		int b = e.color[1];
+		int c = e.color[2];
+		image[x * 300 * 3 + y * 3 + 0] = 'a.0';
+		image[x * 300 * 3 + y * 3 + 1] = 'b.0';
+		image[x * 300 * 3 + y * 3 + 2] = 'c.r';
+	}
+	write_image("spheres.tga", image, N);
 	return 0;
 }
-
 
 
 //void make_Sphere(sphere center, double r, std::vector<sphere>& spherePoints)
