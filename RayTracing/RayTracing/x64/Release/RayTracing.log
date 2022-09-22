@@ -1,0 +1,29 @@
+﻿  main.cpp
+C:\dev\RayTracing\RayTracing\src\main.cpp(56,10): error C2079: 's' uses undefined struct 'sphere'
+C:\dev\RayTracing\RayTracing\src\main.cpp(60,22): error C2665: 'std::vector<sphere,std::allocator<sphere>>::push_back': none of the 2 overloads could convert all the argument types
+C:\Program Files\Microsoft Visual Studio\2022\Community\VC\Tools\MSVC\14.33.31629\include\vector(916,23): message : could be 'void std::vector<sphere,std::allocator<sphere>>::push_back(_Ty &&)'
+          with
+          [
+              _Ty=sphere
+          ]
+C:\Program Files\Microsoft Visual Studio\2022\Community\VC\Tools\MSVC\14.33.31629\include\vector(912,23): message : or       'void std::vector<sphere,std::allocator<sphere>>::push_back(const _Ty &)'
+          with
+          [
+              _Ty=sphere
+          ]
+C:\dev\RayTracing\RayTracing\src\main.cpp(60,10): message : 'void std::vector<sphere,std::allocator<sphere>>::push_back(const _Ty &)': cannot convert argument 1 from 'int' to 'const _Ty &'
+          with
+          [
+              _Ty=sphere
+          ]
+C:\dev\RayTracing\RayTracing\src\main.cpp(60,22): message : Reason: cannot convert from 'int' to 'const _Ty'
+          with
+          [
+              _Ty=sphere
+          ]
+C:\dev\RayTracing\RayTracing\src\main.cpp(60,22): message : use of undefined type 'sphere'
+C:\dev\RayTracing\RayTracing\src\main.cpp(10,8): message : see declaration of 'sphere'
+C:\Program Files\Microsoft Visual Studio\2022\Community\VC\Tools\MSVC\14.33.31629\include\vector(912,23): message : see declaration of 'std::vector<sphere,std::allocator<sphere>>::push_back'
+C:\dev\RayTracing\RayTracing\src\main.cpp(60,22): message : while trying to match the argument list '(int)'
+C:\dev\RayTracing\RayTracing\src\main.cpp(63,24): error C2027: use of undefined type 'sphere'
+C:\dev\RayTracing\RayTracing\src\main.cpp(10): message : see declaration of 'sphere'
