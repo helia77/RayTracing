@@ -69,7 +69,7 @@ struct vect {
 		return result;
 	}
 };
-struct ray {
+struct rays {
 	vect p;
 	vect v;
 	vect position(float t) {
@@ -82,18 +82,16 @@ struct ray {
 };
 struct intersection {
 	vect pts;
-	std::vector<float> color;
-	
-	intersection(vect pos, std::vector<float> col) {
-		pts = pos;
-		color = col;
+	float color[3];
+	float t;
+	intersection(rays ray, sphere sph) {
+		
 	}
 };
 
 vector<sphere> ReadSphere(string s) {
 	ifstream rfile(s);
 	vector<sphere> spheres;
-
 	while (rfile) {
 		sphere s;
 		rfile >> s.points.x >> s.points.y >> s.points.z;
