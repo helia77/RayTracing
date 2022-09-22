@@ -9,9 +9,66 @@ using namespace std;
 struct sphere {
 	// c, r, color
 	float radius;
-	float points[3];
+	vect points;
 	float color[3];
 
+};
+
+struct vect {
+	float x, y, z;
+	float len;
+
+	vect(float X, float Y, float Z)
+		: x(X), y(Y), z(Z)
+	{
+		len = sqrt(X * X + Y * Y + Z * Z);
+	}
+
+	vect()
+		: x(0), y(0), z(0), len(0)
+	{
+	}
+
+	vect operator-(vect tar) {
+		vect result;
+		result.x = x - tar.x;
+		result.y = y - tar.y;
+		result.z = z - tar.z;
+		return result;
+	}
+
+	vect operator+(vect tar) {
+		vect result;
+		result.x = x + tar.x;
+		result.y = y + tar.y;
+		result.z = z + tar.z;
+		return result;
+	}
+
+	// dot (inner) product of two vectors
+	float dot(vect tar) {
+		float result = 0.0f;
+		result = result + x * tar.x;
+		result = result + y * tar.y;
+		result = result + z * tar.z;
+		return result;
+	}
+	// scalar 
+	vect operator*(vect tar) {
+		vect result;
+		result.x = x * tar.x;
+		result.y = y * tar.y;
+		result.z = z * tar.z;
+		return result;
+	}
+
+	vect normalize() {
+		vect result;
+		result.x = x / len;
+		result.y = y / len;
+		result.z = z / len;
+		return result;
+	}
 };
 
 struct intersection {
@@ -23,7 +80,22 @@ struct intersection {
 		color = col;
 	}
 };
-vector<sphere> ReadSphere(string s);
+
+vector<sphere> ReadSphere(string s) {
+	ifstream rfile(s);
+	vector<sphere> spheres;
+
+	while (rfile) {
+		sphere s;
+		rfile >> s.points.x >> s.points.y >> s.points.z;
+		rfile >> s.radius;
+		rfile >> s.color[0] >> s.color[1] >> s.color[2];
+		spheres.push_back(s);
+	}
+	return spheres;
+}
+
+void make_Sphere(sphere center, double r, std::vector<sphere>& spherePoints);
 
 void write_image(std::string filename, char* bytes, short N) {
 	std::ofstream outfile;
@@ -46,16 +118,18 @@ void write_image(std::string filename, char* bytes, short N) {
 
 int main(int argc, char** argv[])
 {
-	char* image = (char*)malloc(100 * 100 * 3);
-	for (int i = 0; i < 100; i++) {
-		for (int j = 0; j < 100; j++) {
-			image[j * 100*3 + i * 3 + 0] = '0';
-			image[j * 100*3 + i * 3 + 1] = 'g';
-			image[j * 100*3 + i * 3 + 2] = 'r';
+	float z = 2;
+	short N = 512;
+	char* image = (char*)malloc(N * N * 3);
+	for (int i = 0; i < N; i++) {
+		for (int j = 0; j < N; j++) {
+			image[j * 300*3 + i * 3 + 0] = '0';
+			image[j * 300*3 + i * 3 + 1] = '0';
+			image[j * 300*3 + i * 3 + 2] = 'r';
 		}
 	}
-	write_image("spheres.tga", image, 100);
-
+	
+	write_image("spheres.tga", image, N);
 	vector<sphere> spheres;
 	spheres = ReadSphere("spheres.txt");
 
@@ -63,16 +137,25 @@ int main(int argc, char** argv[])
 	return 0;
 }
 
-vector<sphere> ReadSphere(string s) {
-	ifstream rfile(s);
-	vector<sphere> spheres;
 
-	while (rfile) {
-		sphere s;
-		rfile >> s.points[0] >> s.points[1] >> s.points[2];
-		rfile >> s.radius;
-		rfile >> s.color[0] >> s.color[1] >> s.color[2];
-		spheres.push_back(s);
-	}
-	return spheres;
-}
+
+//void make_Sphere(sphere center, double r, std::vector<sphere>& spherePoints)
+//{
+//	const double PI = 3.1415926;
+//	spherePoints.clear();
+//
+//	// Iterate through phi, theta then convert r,theta,phi to  XYZ
+//	for (double phi = 0.; phi < 2 * PI; phi += PI / 10.) // Azimuth [0, 2PI]
+//	{
+//		for (double theta = 0.; theta < PI; theta += PI / 10.) // Elevation [0, PI]
+//		{
+//			sphere point;
+//			point.x = r * cos(phi) * sin(theta) + center.x;
+//			point.y = r * sin(phi) * sin(theta) + center.y;
+//			point.z = r * cos(theta) + center.z;
+//			spherePoints.push_back(point);
+//		}
+//	}
+//	return;
+//}
+
