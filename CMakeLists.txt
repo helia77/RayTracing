@@ -1,3 +1,6 @@
+#Specify the version being used aswell as the language
+cmake_minimum_required(VERSION 3.19)
+
 #Name your project here
 project(raytrace LANGUAGES CXX)
 

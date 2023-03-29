@@ -1,79 +1,56 @@
 #include<iostream>
-#include<sstream>
 #include<fstream>
-#include<vector>
 #include<cmath>
+#include<vector>
 #include<thread>
 #include<ctime>
 
 using namespace std;
 
 
-struct vect {
-	float x, y, z;
-	float len;
-	vect(float X, float Y, float Z)
-		: x(X), y(Y), z(Z)
-	{
-		len = sqrt(X * X + Y * Y + Z * Z);
-	}
-	vect()
-		: x(0), y(0), z(0), len(0)
-	{}
-	vect operator-(vect tar) {
-		return vect(x - tar.x, y - tar.y, z - tar.z);
-	}
-	vect operator+(vect tar) {
-		return vect(x + tar.x, y + tar.y, z + tar.z);
-	}
-	// dot (inner) product of two vectors
-	float dot(vect& tar) {
-		return (x * tar.x) + (y * tar.y) + (z * tar.z);
-	}
-	
-	vect operator*(vect tar) {
-		return vect(x * tar.x, y * tar.y, z * tar.z);
-	}
-	vect operator*(float t) {
-		return vect(x * t, y * t, z * t);
-	}
-	vect operator/(float t) {
-		return vect(x / t, y / t, z / t);
-	}
-	vect normalize() {
-		return vect(x / len, y / len, z / len);
-	}
-	friend ostream& operator<<(ostream& out, const vect& v) {
-		out << v.x << ' ' << v.y << ' ' << v.z;
-		return out;
-	}
-};
 struct color {
 	float red, gre, blu;
-	color(float r, float g, float b)
-		: red(r), gre(g), blu(b)
-	{}
+	color(float b, float g, float r)
+		: blu(b), gre(g), red(r) {}
 	color()
-		: red(0), gre(0), blu(0)
-	{}
+		: blu(0), gre(0), red(0) {}
 	color operator*(float i) {
-		red *= i;
-		gre *= i;
 		blu *= i;
+		gre *= i;
+		red *= i;
 		return *this;
 	}
-	color operator*(color clr) {
-		red *= clr.red;
-		gre *= clr.gre;
-		blu *= clr.blu;
-		return *this;
+};
+
+// vectors
+struct vect {
+
+	float x, y, z;
+	float length;
+
+	//constructor
+	vect(float x0, float y0, float z0)
+		: x(x0), y(y0), z(z0), length(sqrt(x0 * x0 + y0 * y0 + z0 * z0)) {}
+
+	//default constructor
+	vect()
+		: x(0), y(0), z(0), length(0) {}
+
+	// dot (inner) product
+	float dot(vect v) {
+		return (x * v.x) + (y * v.y) + (z * v.z);
 	}
-	color operator+(color clr) {
-		color result;
-		result.red = red * clr.red;
-		result.blu = blu * clr.blu;
-		result.gre = gre * clr.gre;
-		return result;
+	vect scalar(float t) {
+		return vect(x * t, y * t, z * t);
+	}
+	vect normalize() {
+		return vect(x / length, y / length, z / length);
+	}
+	vect operator+(vect v) {
+		return vect(x + v.x, y + v.y, z + v.z);
+	}
+	vect operator-(vect v) {
+		return vect(x - v.x, y - v.y, z - v.z);
 	}
 };
 
@@ -86,97 +63,98 @@ struct sphere {
 		return norm;
 	}
 };
+
 struct light {
 	vect center;
 	color clr;
 };
+
 struct rays {
-	vect pov; //point of view
+	vect point;
 	vect v;
-	rays()
-		: pov(0,0,0), v(0,0,0)
-	{}
+
 	rays(vect p, vect vec)
-		: pov(p), v(vec)
-	{}
+		: point(p), v(vec) {}
+	rays()
+		: point(0,0,0), v(0,0,0) {}
+	
+	vect unit(sphere sph) {
+		return vect((point.x - sph.center.x) / sph.radius, (point.y - sph.center.y) / sph.radius, (point.z - sph.center.z) / sph.radius);
+	}
 };
 
-//If the input ray intersects the input sphere, ouput is a color array of r, g, b
-color intersection(rays ray, vector<sphere> ss, vector<light> light1) {
+// Checks if the input ray intersects the sphere, returns output color of the intersected sphere
+// Calculate the light intensity from surrounding lights on the intersection pixel
+
+color Intersection(rays ray, vector<sphere> ss, vector<light> Lights) {
 	color pixel(1.0f, 1.0f, 1.0f);
 	color light_clr;
 	float delta;
 	float a, b, c;
 	float t = 0.0f;
-	float min = (float)INT_MAX;							//to see the smallest t value
-	float ka = 0.4f;					//light intensity
+	float min = (float)INT_MAX;							// to see the smallest t value
+
 	for (int i = 0; i < ss.size(); i++) {
 		sphere sph = ss.at(i);
-		vect distance = ray.pov - sph.center;
+		vect p_c = ray.point - sph.center;
 		a = ray.v.dot(ray.v);
-		b = ray.v.dot(distance) * 2;
-		c = distance.dot(distance) - (sph.radius * sph.radius);
+		b = ray.v.dot(p_c) * 2;
+		c = p_c.dot(p_c) - (sph.radius * sph.radius);
 		delta = (b * b) - (4 * a * c);
 		t = (-b - sqrt(delta)) / (2 * a);
-		if (delta >= 0 && t < min && t > 0) {
-			//pixel = sph.clr;
-			min = t;
-			float intens = 0.0f;			//light intensity
-			rays light_r;
-			//calculate		p + vt		or the pixel on the sphere
-			light_r.pov = ray.v * t;
 
-			//the norm of the sphere center to the pixel
-			vect N = sph.Norm(light_r.pov);
-			//color final;
-			//calculate unit vector from pov to light center
-			for (int j = 0; j < light1.size(); j++) {
-				light lit = light1.at(j);
+		// 2 or 1 intersection:
+		// lowest t to print closest sphere
+		// no object behind camera matters in this case
+		if (delta >= 0 && t < min && t > 0) {
+			min = t;
+			float intens = 0.0f;		// light intensity
+			rays light_r;
+
+			//	p + vt	or the intersection point (pixel) on the sphere
+			light_r.point = ray.v.scalar(t);
+
+			// unit vector from sphere center to the intersection point
+			vect N = light_r.unit(sph);
+
+			// unit vector from intersection point to light center
+			for (int j = 0; j < Lights.size(); j++) {
+				light lit = Lights.at(j);
 				light_r.v = (lit.center - sph.center).normalize();
 
-				//calculating illumination
+				// light contribution
 				intens += (light_r.v.dot(N) > 0) ? light_r.v.dot(N) : 0;
 			}
-			intens /= light1.size();
+			intens /= Lights.size();
 			pixel = sph.clr * intens;
 		}
 	}
 	return pixel;
-
-
 };
 
 vector<sphere> ReadSphere(string s) {
-	ifstream rfile(s);
-	vector<sphere> spheres;
-	float x, y, z;
-	while (rfile) {
+	ifstream file(s);
+	vector<sphere> Spheres;
+	while (file) {
 		sphere sph;
-		rfile >> x >> y >> z;
-		sph.center.x = x;
-		sph.center.y = y;
-		sph.center.z = z;
-		rfile >> sph.radius;
-		rfile >> sph.clr.blu >> sph.clr.gre >> sph.clr.red;
-		spheres.push_back(sph);
+		file >> sph.center.x >> sph.center.y >> sph.center.z;
+		file >> sph.radius;
+		file >> sph.clr.blu >> sph.clr.gre >> sph.clr.red;
+		Spheres.push_back(sph);
 	}
-	return spheres;
+	return Spheres;
 }
+
 vector<light> ReadLight(string s) {
-	ifstream rfile(s);
+	ifstream file(s);
 	vector<light> Lights;
-	float x, y, z;
-	while (rfile) {
+	while (file) {
 		light lit;
-		rfile >> x >> y >> z;
-		lit.center.x = x;
-		lit.center.y = y;
-		lit.center.z = z;
-		rfile >> lit.clr.red >> lit.clr.gre >> lit.clr.blu;
+		file >> lit.center.x >> lit.center.y >> lit.center.z;
+		file >> lit.clr.blu >> lit.clr.gre >> lit.clr.red;
 		Lights.push_back(lit);
 	}
 	return Lights;
-	//lights = Lights;
 }
 
 void write_image(string filename, char* bytes, short N) {
@@ -198,26 +176,25 @@ void write_image(string filename, char* bytes, short N) {
 	outfile.close();				// close the file
 }
 
-void renderImage(char* image, vector<sphere> spheres, vector<light> lights, short N, int start, int end) {
-	float z = 1.5;
-	float dx = 2.0f / (N - 1);			//change scale
-	float dy = 2.0f / (N - 1);
-	float sx = -1.0f;		//starting point
-	float sy = -1.0f;
-	for (short i = start; i < end; i++) {
-		for (short j = 0; j < N; j++) {
-			float rx = sx + j * dx;
-			float ry = i;
+void RayTracing(char* image, vector<sphere> spheres, vector<light> lights, int begin, int end, short N, float z) {
+
+	float scale = N - 1;					// scale pixel size
+	float start = -1.0f;						//starter point
+
+	//start and stop point for each column
+	for (short y = begin; y < end; y++) {
+		for (short x = 0; x < N; x++) {
+
+			float rx = 2 * (x / scale) + start;
+			float ry = 2 * (y / scale) + start;
 			float rz = z;
 			vect direction = vect(rx, ry, rz).normalize();
-			vect view(0.0f, 0.0f, 0.0f);
-			rays ray;
-			ray.v = direction;
-			ray.pov = view;
-			color pixel_clr = intersection(ray, spheres, lights);
-			image[i * N * 3 + j * 3 + 0] = pixel_clr.blu * 255;
-			image[i * N * 3 + j * 3 + 1] = pixel_clr.gre * 255;
-			image[i * N * 3 + j * 3 + 2] = pixel_clr.red * 255;
+			vect camera(0.0f, 0.0f, 0.0f);
+			rays ray(camera, direction);
+			color pixel_clr = Intersection(ray, spheres, lights);
+			image[y * N * 3 + x * 3 + 0] = pixel_clr.red * 255;
+			image[y * N * 3 + x * 3 + 1] = pixel_clr.gre * 255;
+			image[y * N * 3 + x * 3 + 2] = pixel_clr.blu * 255;
 		}
 	}
 
@@ -226,31 +203,43 @@ void renderImage(char* image, vector<sphere> spheres, vector<light> lights, shor
 
 int main(int argc, char** argv[])
 {
+	cout << "Number of processors: " << thread::hardware_concurrency() << endl;
+	float z = 1;
 	short N = 1024;
-	char* image = (char*)malloc(N * N * 3);
+	char* Img = (char*)malloc(N * N * 3);
 	vector<sphere> spheres;
 	vector<light> lights;
+
 	spheres = ReadSphere("spheres.txt");
 	lights = ReadLight("lights.txt");
 	
-	int numThreads = 200; // number of threads to launch
-	vector<std::thread> threads;
+	// number of threads: dividing the image into sub-problems (number of processors)
+	int numTh = N / thread::hardware_concurrency();
+	vector<thread> threads;
 
-	time_t mT0 = time(NULL);
+	// timer starts
+	clock_t start = clock();
 
-	for (int i = 0; i < numThreads; i++) {
-		int start = (double)i / (double)numThreads * N;
-		int stop = (double)(i + 1) / (double)numThreads * N;
-		threads.push_back(std::thread(renderImage, image, spheres, lights, N, start, stop));
+	// number of columns that each thread computes
+	float col_num = float(N) / float(numTh);
+
+	int begin{}, end{};
+
+	// running threads
+	// each thread executes a number of columns
+	for (int i = 0; i < numTh; i++) {
+		begin = i * col_num;
+		end = (i + 1) * col_num;
+		threads.push_back(thread(RayTracing, Img, spheres, lights, begin, end, N, z));
+	}
+	for (auto& th : threads) {
+		th.join();
 	}
 
-	for (auto& thread : threads) {
-		thread.join();
-	}
+	// timer ends
+	clock_t stop = clock();
+	cout << "Execution time: " << (double)(stop - start)/ CLOCKS_PER_SEC << endl;
 
-	time_t mT1 = time(NULL);
-	cout << "Execution time: " << (mT1 - mT0)* 1.000 << endl;
-
-	write_image("spheres.tga", image, N);
+	write_image("spheres.tga", Img, N);
 	return 0;
 }
